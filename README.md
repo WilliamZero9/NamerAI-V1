@@ -1,12 +1,12 @@
-## To try it out
-# Create venv
+# To try it out
+## Create venv
 python3 -m venv venv
 
-# Activate it
+## Activate it
 source venv/bin/activate
 
-#Install PyTorch
+## Install PyTorch
 pip install torch
 
-# Run script
+## Run script
 python NamerAI-V1.py
