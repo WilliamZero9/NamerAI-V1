@@ -1,4 +1,5 @@
-# To try it out
+# Random name generator
+To try it out
 ## Create venv
 python3 -m venv venv
 
