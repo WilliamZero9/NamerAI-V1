@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -101,11 +102,18 @@ names = [
     "agamemnon", "telemachus", "alcibiades", "hippocrates", "cassiopeia",
     "penthesilea", "polyxena", "chrysanthemum", "demetrius", "theophilus"
 ]
+with open("names.txt", "r") as f:
+    for line in f:
+        w = line.strip().lower()
+        if w.isalpha() and len(w) <= max_length:
+            names.append(w)
 
 for name in names:
+    if len(name) > max_length:
+        continue
     word = list(name)
     word.append(" ")
-    wordl = [26]*13
+    wordl = [26]*(max_length+1)
     for i in range(0,len(name)):
         wordl[i] = letters[word[i]]
         tensor1.append(wordl.copy())
@@ -121,7 +129,7 @@ class Namer(nn.Module):
     def __init__(self):
         super().__init__()
         self.embed_layer = nn.Embedding(27,10)
-        self.hidden_layer = nn.Linear(130,64)
+        self.hidden_layer = nn.Linear((max_length+1)*10,64)
         self.out_layer = nn.Linear(64,27)
     def forward(self,x):
         x = self.embed_layer(x)
@@ -135,23 +143,32 @@ Mod1 = Namer()
 grader = nn.CrossEntropyLoss()
 teacher = optim.Adam(Mod1.parameters(), lr = 0.01)
 
-for epoch in range(500):
-    Mod1.zero_grad()
-    logits = Mod1(tensor1)
-    loss = grader(logits, tensor2)
-    loss.backward()
-    teacher.step()
-    if (epoch%100 == 0):
-        print (loss.item())
+if os.path.exists(f"namer_brain_{max_length}.pth"):
+    Mod1.load_state_dict(torch.load(f"namer_brain_{max_length}.pth"))
+    print(f"Loaded saved brain from namer_brain_{max_length}.pth!")
+else:
+    for epoch in range(800):
+        Mod1.zero_grad()
+        logits = Mod1(tensor1)
+        loss = grader(logits, tensor2)
+        loss.backward()
+        teacher.step()
+        if (epoch%100 == 0):
+            print (loss.item())
+    torch.save(Mod1.state_dict(), f"namer_brain_{max_length}.pth")
+    print(f"Saved brain to namer_brain_{max_length}.pth!")
 
 # User Input
 while True:
-    first_letter = input("Enter ONE letter: ")
-    if first_letter == " ":
+    try:
+        first_letter = input("Enter some letters you want to start with: ")
+    except KeyboardInterrupt:
+        print ("\n Exiting...")
         break
-    wordl = [26] * 13
-    wordl[0] = letters[first_letter]
-    for i in range(1,12):
+    wordl = [26] * (max_length+1)
+    for k in range(0,len(first_letter)):
+        wordl[k] = letters[first_letter[k]]
+    for i in range(len(first_letter),max_length+1):
         x = torch.tensor([wordl])
         x = Mod1(x)
         x = F.softmax(x,dim=-1)
