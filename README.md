@@ -6,7 +6,7 @@ A PyTorch character-level neural network that generates custom names based on st
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/WilliamZero9/GitHub_portfolio.git
+git clone https://github.com/WilliamZero9/NamerAI-V1
 cd GitHub_portfolio
 ```
 
